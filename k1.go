@@ -479,13 +479,19 @@ func sendMessageToK2(login, message string) {
 }
 
 func main() {
+	// Проверяем флаг --gui
+	if len(os.Args) > 1 && os.Args[1] == "--gui" {
+		k1MainGUI() // Запуск GUI версии
+		return
+	}
+
+	// Консольная версия (как было)
 	err := InitDB()
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("=== K1 ===")
-	fmt.Println("База данных инициализирована")
+	fmt.Println("=== К1 ===")
 
 	go func() {
 		http.HandleFunc("/challenge", challengeHandler)
@@ -493,16 +499,13 @@ func main() {
 		http.HandleFunc("/dh/init", dhInitHandler)
 		http.HandleFunc("/dh/exchange", dhExchangeHandler)
 		http.HandleFunc("/chat/receive", chatReceiveHandler)
-		//fmt.Println("HTTP сервер запущен на порту 8080")
 		http.ListenAndServe(":8080", nil)
 	}()
 
 	reader := bufio.NewReader(os.Stdin)
-	var currentLogin string
-
 	for {
 		fmt.Println("\n--- МЕНЮ ---")
-		fmt.Println("1. Зарегистрировать пользователя")
+		fmt.Println("1. Зарегистрироваться")
 		fmt.Println("2. Отправить сообщение K2")
 		fmt.Println("3. Выход")
 		fmt.Print("Выбор: ")
@@ -514,15 +517,7 @@ func main() {
 		case "1":
 			handleRegister()
 		case "2":
-			if currentLogin == "" {
-				fmt.Print("Введите логин пользователя: ")
-				currentLogin, _ = reader.ReadString('\n')
-				currentLogin = strings.TrimSpace(currentLogin)
-			}
-			fmt.Print("Сообщение:  ")
-			msg, _ := reader.ReadString('\n')
-			msg = strings.TrimSpace(msg)
-			sendMessageToK2(currentLogin, msg)
+
 		case "3":
 			fmt.Println("Выход")
 			return

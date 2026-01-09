@@ -403,23 +403,31 @@ func showSessionInfo() {
 }
 
 func main() {
-	fmt.Println("=== K2 ===")
-	fmt.Println("Подключение к серверу:  http://localhost:8080")
+	// Проверяем флаг --gui
+	if len(os.Args) > 1 && os.Args[1] == "--gui" {
+		k2MainGUI() // Запуск GUI версии
+		return
+	}
 
+	// Консольная версия (как было)
+	fmt.Println("=== K2 - КЛИЕНТ ===")
+	fmt.Println("Подключение к серверу:   http://localhost:8080")
+
+	// HTTP сервер для приема сообщений
 	go func() {
 		http.HandleFunc("/chat/receive", chatReceiveHandler)
-		//fmt.Println("HTTP сервер K2 запущен на порту 8081")
+		fmt.Println("HTTP сервер K2 запущен на порту 8081")
 		http.ListenAndServe(":8081", nil)
 	}()
 
 	reader := bufio.NewReader(os.Stdin)
-	var currentLogin string
 	authenticated := false
+	var currentLogin string
 
 	for {
 		fmt.Println("\n--- МЕНЮ ---")
 		if !authenticated {
-			fmt.Println("1. Войти")
+			fmt.Println("1. Аутентифицироваться")
 		} else {
 			fmt.Println("2. Установить защищенное соединение (Диффи-Хелман)")
 			fmt.Println("3. Отправить сообщение K1")
@@ -438,19 +446,19 @@ func main() {
 				if success {
 					currentLogin = login
 					authenticated = true
-					fmt.Println("Теперь можно установить защищенное соединение!")
+					fmt.Println("\nТеперь можно установить защищенное соединение!")
 				}
 			}
 		case "2":
 			if authenticated {
 				success := initDiffieHellman(currentLogin)
 				if success {
-					fmt.Println("Защищенное соединение установлено! Можно отправлять сообщения.")
+					fmt.Println("\nЗащищенное соединение установлено!   Можно отправлять сообщения.")
 				}
 			}
 		case "3":
 			if authenticated && k2Session != nil && k2Session.Established {
-				fmt.Print("Сообщение: ")
+				fmt.Print("Сообщение:   ")
 				msg, _ := reader.ReadString('\n')
 				msg = strings.TrimSpace(msg)
 				sendMessageToK1(currentLogin, msg)
